@@ -7,7 +7,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -17,13 +16,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.lolevsky.nasaplanetary.MainApplication;
 import me.lolevsky.nasaplanetary.R;
-import me.lolevsky.nasaplanetary.data.imageloader.IImageLoader;
+import me.lolevsky.nasaplanetary.domain.imageloader.IImageLoader;
 import me.lolevsky.nasaplanetary.model.ApodModel;
 import me.lolevsky.nasaplanetary.presenter.PlanetaryApodPresenter;
 import me.lolevsky.nasaplanetary.presenter.Presenter;
+import me.lolevsky.nasaplanetary.widget.ProgressImageView;
 
-public class PlanetaryApodActivity extends BaseActivity<IView, ApodModel> {
-    @Inject MainApplication application;
+public class PlanetaryApodActivity extends BaseActivity<ApodModel> {
     @Inject PlanetaryApodPresenter planetaryApodPresenter;
     @Inject IImageLoader imageLoader;
 
@@ -33,21 +32,30 @@ public class PlanetaryApodActivity extends BaseActivity<IView, ApodModel> {
     @BindView(R.id.collapsible_toolbar) Toolbar toolbar;
     @BindView(R.id.collapsing_toolbar_layout) CollapsingToolbarLayout cllapsingToolbarLayout;
     @BindView(R.id.coordinator_layout) CoordinatorLayout coordinatorLayout;
-    @BindView(R.id.progressBar) ProgressBar progressBar;
-    @BindView(R.id.image_header) ImageView imageView;
+    @BindView(R.id.progress_bar) ProgressBar progressBar;
+    @BindView(R.id.image_header) ProgressImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ((MainApplication) getApplication()).getApplicationComponent().inject(this);
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_planetary_apod);
         ButterKnife.bind(this);
 
         setSupportActionBar(toolbar);
+        intActionBar();
 
         if (savedInstanceState == null) {
             planetaryApodPresenter.loadData();
+        }
+    }
+
+    private void intActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
 
@@ -64,13 +72,13 @@ public class PlanetaryApodActivity extends BaseActivity<IView, ApodModel> {
         return planetaryApodPresenter;
     }
 
-    @Override IView getView() {
-        return this;
-    }
-
     @Override public void onLoading() {
         progressBar.setVisibility(View.VISIBLE);
         coordinatorLayout.setVisibility(View.GONE);
+    }
+
+    @Override public void onLoadingMore() {
+
     }
 
     @Override public void onComplete(ApodModel model) {
@@ -79,7 +87,7 @@ public class PlanetaryApodActivity extends BaseActivity<IView, ApodModel> {
         explanationTextView.setText(model.getExplanation());
         copyrightTextView.setText(model.getCopyright());
 
-        imageLoader.loadImage(model.getUrl(), imageView);
+        imageLoader.loadImage(model.getUrl(), R.drawable.back_main, imageView.getImageView(), imageView.getProgressBar());
 
         progressBar.setVisibility(View.GONE);
         coordinatorLayout.setVisibility(View.VISIBLE);

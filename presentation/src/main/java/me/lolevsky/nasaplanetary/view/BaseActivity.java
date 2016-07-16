@@ -1,18 +1,25 @@
 package me.lolevsky.nasaplanetary.view;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+
 import org.parceler.Parcels;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import me.lolevsky.nasaplanetary.presenter.Presenter;
 
-public abstract class BaseActivity<T extends IView, M> extends AppCompatActivity implements IView<M> {
+public abstract class BaseActivity<M> extends AppCompatActivity implements IView<M> {
     private final String SAVE_INSTANCE_STATE = "SaveInstanceState";
 
-    abstract Presenter getPresenter();
+    Dialog errorDialog;
 
-    abstract T getView();
+    abstract Presenter getPresenter();
 
     @Override protected void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putParcelable(SAVE_INSTANCE_STATE, Parcels.wrap(getPresenter().getModel()));
@@ -27,9 +34,16 @@ public abstract class BaseActivity<T extends IView, M> extends AppCompatActivity
         }
     }
 
+    @Override public void onStartActivity(Class<?> cls, Bundle bundle) {
+        Intent intent = new Intent(this, cls);
+        intent.putExtras(bundle);
+
+        startActivity(intent);
+    }
+
     @Override protected void onStart() {
         super.onStart();
-        getPresenter().setView(getView());
+        getPresenter().setView(this);
     }
 
     @Override protected void onStop() {
@@ -50,5 +64,24 @@ public abstract class BaseActivity<T extends IView, M> extends AppCompatActivity
     @Override protected void onDestroy() {
         super.onDestroy();
         getPresenter().destroy();
+    }
+
+    protected boolean checkPlayServices() {
+        final int playServicesStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        if (playServicesStatus != ConnectionResult.SUCCESS) {
+            if (errorDialog == null || (errorDialog != null && !errorDialog.isShowing())) {
+                //If google play services in not available show an error dialog and return
+                errorDialog = GoogleApiAvailability.getInstance().getErrorDialog(this, playServicesStatus, 0, new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialogInterface) {
+                        finish();
+                    }
+                });
+                errorDialog.show();
+            }
+            return false;
+        }
+
+        return true;
     }
 }

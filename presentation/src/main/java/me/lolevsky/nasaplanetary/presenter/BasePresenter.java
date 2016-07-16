@@ -1,30 +1,52 @@
 package me.lolevsky.nasaplanetary.presenter;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 
 import me.lolevsky.nasaplanetary.domain.interactor.BaseInteractor;
+import me.lolevsky.nasaplanetary.domain.tracking.ITracking;
 import me.lolevsky.nasaplanetary.mapper.IModelDataMapper;
+import me.lolevsky.nasaplanetary.utils.PageController;
 import me.lolevsky.nasaplanetary.view.IView;
 import rx.Subscriber;
 
-public abstract class BasePresenter<T extends IView, M, K> implements Presenter<T, M> {
+public abstract class BasePresenter<T extends IView, M, K> implements Presenter<T, M>, PageController.onNewPageRequest {
     T view;
     M model;
     BaseInteractor interaptor;
     IModelDataMapper<K, M> modelDataMapper;
+    boolean isSupportPaging = false;
+    PageController pageController;
+    ITracking tracking;
 
     BasePresenter() {
 
     }
 
-    public BasePresenter(BaseInteractor interaptor, IModelDataMapper modelDataMapper) {
+    public BasePresenter(BaseInteractor interaptor, IModelDataMapper modelDataMapper, ITracking tracking) {
         this.interaptor = interaptor;
         this.modelDataMapper = modelDataMapper;
+        this.tracking = tracking;
     }
 
-    @Override public void loadData() {
+    public PageController getPageController() {
+        return pageController;
+    }
+
+    public void initPageController(RecyclerView recyclerView) {
+        this.pageController = new PageController(recyclerView, this);
+        isSupportPaging = true;
+    }
+
+    public abstract void pagingAddNewData(M newModel);
+
+    @Override public void loadData(String... params) {
         if (view != null) {
-            view.onLoading();
+            if (isSupportPaging && model != null) {
+                view.onLoadingMore();
+            } else {
+                view.onLoading();
+            }
         }
 
         interaptor.execute(new Subscriber<K>() {
@@ -39,9 +61,22 @@ public abstract class BasePresenter<T extends IView, M, K> implements Presenter<
             }
 
             @Override public void onNext(K response) {
-                setModel(modelDataMapper.transform(response));
+                M tempMode = modelDataMapper.transform(response);
+                if (isSupportPaging) {
+                    pageController.setOnLoadFinish(true);
+                    if (model == null) {
+                        setModel(tempMode);
+                    } else {
+                        pagingAddNewData(tempMode);
+                        if (view != null) {
+                            view.onComplete(model);
+                        }
+                    }
+                } else {
+                    setModel(tempMode);
+                }
             }
-        });
+        }, params);
     }
 
     @Override public void setView(@NonNull T view) {
@@ -62,5 +97,9 @@ public abstract class BasePresenter<T extends IView, M, K> implements Presenter<
     @Override public void destroy() {
         interaptor.unsubscribe();
         view = null;
+    }
+
+    @Override public ITracking getTracking() {
+        return tracking;
     }
 }

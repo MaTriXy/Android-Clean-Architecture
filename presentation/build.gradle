@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -59,6 +60,7 @@ dependencies {
     apt "com.google.dagger:dagger-compiler:$rootProject.ext.dagger"
     compile "com.jakewharton:butterknife:$rootProject.ext.butterknife"
     apt "com.jakewharton:butterknife-compiler:$rootProject.ext.butterknife"
-    compile 'org.parceler:parceler-api:1.1.5'
-    apt 'org.parceler:parceler:1.1.5'
+    compile "com.google.firebase:firebase-core:$rootProject.ext.firebase"
+    compile "org.parceler:parceler-api:$rootProject.ext.parceler"
+    apt "org.parceler:parceler:$rootProject.ext.parceler"
 }
