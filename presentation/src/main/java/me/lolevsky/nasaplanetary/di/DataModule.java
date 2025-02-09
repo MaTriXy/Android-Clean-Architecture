@@ -13,13 +13,16 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import me.lolevsky.nasaplanetary.BuildConfig;
 import me.lolevsky.nasaplanetary.MainApplication;
+import me.lolevsky.nasaplanetary.data.remoteconfig.RemoteConfig;
 import me.lolevsky.nasaplanetary.data.repository.Comments;
 import me.lolevsky.nasaplanetary.data.repository.MarsPhotos;
 import me.lolevsky.nasaplanetary.domain.imageloader.IImageLoader;
 import me.lolevsky.nasaplanetary.data.imageloader.ImageLoader;
 import me.lolevsky.nasaplanetary.data.repository.PlanetaryApod;
 import me.lolevsky.nasaplanetary.data.net.NasaService;
+import me.lolevsky.nasaplanetary.domain.remoteconfig.IRemoteConfig;
 import me.lolevsky.nasaplanetary.domain.repository.IComments;
 import me.lolevsky.nasaplanetary.domain.repository.IMarsPhotos;
 import me.lolevsky.nasaplanetary.domain.tracking.ITracking;
@@ -49,8 +52,7 @@ public class DataModule {
         return new MarsPhotos(nasaService);
     }
 
-    @Singleton
-    @Provides ITracking provideTracking(MainApplication application) {
+    @Singleton @Provides ITracking provideTracking(MainApplication application) {
         int playServicesStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(application);
         if (playServicesStatus == ConnectionResult.SUCCESS) {
             return new Tracking(FirebaseAnalytics.getInstance(application));
@@ -72,14 +74,20 @@ public class DataModule {
                 @Override public void LogException(String exception) {
 
                 }
+
+                @Override public void setUserProperty(String experimentName, IRemoteConfig.ExperimentVariant experimentVariant) {
+
+                }
             };
         }
     }
 
-    @Provides IComments provideComments(MainApplication application) {
+    @Singleton @Provides IComments provideComments(MainApplication application) {
         int playServicesStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(application);
         if (playServicesStatus == ConnectionResult.SUCCESS) {
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+            FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+            firebaseDatabase.setPersistenceEnabled(true);
+            DatabaseReference databaseReference = firebaseDatabase.getReference();
             return new Comments(databaseReference);
         }else{
             return new IComments() {
@@ -94,8 +102,21 @@ public class DataModule {
         }
     }
 
-    @Singleton
-    @Provides IImageLoader provideImageLoader(MainApplication mainApplication) {
+    @Singleton @Provides IRemoteConfig provideRemoteConfig(MainApplication application, ITracking tracking) {
+        int playServicesStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(application);
+        if (playServicesStatus == ConnectionResult.SUCCESS) {
+            return new RemoteConfig(BuildConfig.DEBUG, tracking);
+        }else{
+            return new IRemoteConfig() {
+
+                @Override public ExperimentVariant getExperimentVariant(String key) {
+                    return ExperimentVariant.NONE;
+                }
+            };
+        }
+    }
+
+    @Singleton @Provides IImageLoader provideImageLoader(MainApplication mainApplication) {
         return new ImageLoader(mainApplication);
     }
 }

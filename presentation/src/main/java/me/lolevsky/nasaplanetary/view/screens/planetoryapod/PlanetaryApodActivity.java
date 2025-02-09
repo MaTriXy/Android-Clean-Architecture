@@ -1,4 +1,4 @@
-package me.lolevsky.nasaplanetary.view;
+package me.lolevsky.nasaplanetary.view.screens.planetoryapod;
 
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -18,8 +18,8 @@ import me.lolevsky.nasaplanetary.MainApplication;
 import me.lolevsky.nasaplanetary.R;
 import me.lolevsky.nasaplanetary.domain.imageloader.IImageLoader;
 import me.lolevsky.nasaplanetary.model.ApodModel;
-import me.lolevsky.nasaplanetary.presenter.PlanetaryApodPresenter;
-import me.lolevsky.nasaplanetary.presenter.Presenter;
+import me.lolevsky.nasaplanetary.view.presenter.Presenter;
+import me.lolevsky.nasaplanetary.view.BaseActivity;
 import me.lolevsky.nasaplanetary.widget.ProgressImageView;
 
 public class PlanetaryApodActivity extends BaseActivity<ApodModel> {
@@ -35,8 +35,9 @@ public class PlanetaryApodActivity extends BaseActivity<ApodModel> {
     @BindView(R.id.progress_bar) ProgressBar progressBar;
     @BindView(R.id.image_header) ProgressImageView imageView;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    boolean isFirstTimeCalled = false;
+
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ((MainApplication) getApplication()).getApplicationComponent().inject(this);
 
@@ -45,8 +46,13 @@ public class PlanetaryApodActivity extends BaseActivity<ApodModel> {
 
         setSupportActionBar(toolbar);
         intActionBar();
+    }
 
-        if (savedInstanceState == null) {
+    @Override protected void onStart() {
+        super.onStart();
+
+        if(!isFirstTimeCalled){
+            isFirstTimeCalled = true;
             planetaryApodPresenter.loadData();
         }
     }
@@ -68,7 +74,7 @@ public class PlanetaryApodActivity extends BaseActivity<ApodModel> {
         cllapsingToolbarLayout.setTitle(title);
     }
 
-    @Override Presenter getPresenter() {
+    @Override protected Presenter getPresenter() {
         return planetaryApodPresenter;
     }
 

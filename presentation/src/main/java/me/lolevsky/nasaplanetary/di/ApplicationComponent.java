@@ -4,10 +4,11 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import me.lolevsky.nasaplanetary.MainApplication;
-import me.lolevsky.nasaplanetary.view.MainActivity;
-import me.lolevsky.nasaplanetary.view.MarsPhotosActivity;
-import me.lolevsky.nasaplanetary.view.PhotoCommentsActivity;
-import me.lolevsky.nasaplanetary.view.PlanetaryApodActivity;
+import me.lolevsky.nasaplanetary.view.screens.main.MainActivity;
+import me.lolevsky.nasaplanetary.view.screens.marsphoto.MarsPhotosActivity;
+import me.lolevsky.nasaplanetary.view.screens.photocomment.PhotoCommentsActivity;
+import me.lolevsky.nasaplanetary.view.screens.planetoryapod.PlanetaryApodActivity;
+import me.lolevsky.nasaplanetary.view.screens.splash.SplashActivity;
 
 @Singleton
 @Component(
@@ -21,6 +22,8 @@ import me.lolevsky.nasaplanetary.view.PlanetaryApodActivity;
 
 public interface ApplicationComponent {
     void inject(MainApplication mainApplication);
+
+    void inject(SplashActivity splashActivity);
 
     void inject(MainActivity mainActivity);
 

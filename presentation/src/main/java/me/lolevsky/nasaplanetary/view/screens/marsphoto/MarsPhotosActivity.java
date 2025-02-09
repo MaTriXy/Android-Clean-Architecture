@@ -1,4 +1,4 @@
-package me.lolevsky.nasaplanetary.view;
+package me.lolevsky.nasaplanetary.view.screens.marsphoto;
 
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
@@ -19,10 +19,9 @@ import me.lolevsky.nasaplanetary.MainApplication;
 import me.lolevsky.nasaplanetary.R;
 import me.lolevsky.nasaplanetary.adapters.MarsPhotosAdapter;
 import me.lolevsky.nasaplanetary.domain.imageloader.IImageLoader;
-import me.lolevsky.nasaplanetary.domain.repository.IComments;
 import me.lolevsky.nasaplanetary.model.MarsPhotosModel;
-import me.lolevsky.nasaplanetary.presenter.MarsPhotosPresenter;
-import me.lolevsky.nasaplanetary.presenter.Presenter;
+import me.lolevsky.nasaplanetary.view.presenter.Presenter;
+import me.lolevsky.nasaplanetary.view.BaseActivity;
 
 public class MarsPhotosActivity extends BaseActivity<MarsPhotosModel> {
     @Inject MainApplication context;
@@ -36,6 +35,8 @@ public class MarsPhotosActivity extends BaseActivity<MarsPhotosModel> {
     @BindView(R.id.progress_bar_more) ProgressBar progressBarMore;
 
     MarsPhotosAdapter marsPhotosAdapter;
+
+    boolean isFirstTimeCalled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +56,14 @@ public class MarsPhotosActivity extends BaseActivity<MarsPhotosModel> {
         recyclerView.setAdapter(marsPhotosAdapter);
 
         marsPhotosPresenter.initPageController(recyclerView);
+    }
 
-        if (savedInstanceState == null) {
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if(!isFirstTimeCalled){
+            isFirstTimeCalled = true;
             marsPhotosPresenter.loadData();
         }
     }
@@ -69,7 +76,7 @@ public class MarsPhotosActivity extends BaseActivity<MarsPhotosModel> {
         }
     }
 
-    @Override Presenter getPresenter() {
+    @Override protected Presenter getPresenter() {
         return marsPhotosPresenter;
     }
 
